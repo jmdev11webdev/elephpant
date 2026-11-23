@@ -14,3 +14,19 @@ test('authenticated users can visit the dashboard', function () {
     $response = $this->get(route('dashboard'));
     $response->assertOk();
 });
+
+test('unverified users can visit the dashboard when email verification is disabled', function () {
+    $user = User::factory()->unverified()->create();
+    $this->actingAs($user);
+
+    $response = $this->get(route('dashboard'));
+    $response->assertOk();
+});
+
+test('passkey login options endpoint returns valid webauthn challenge', function () {
+    $response = $this->getJson('/passkeys/login/options');
+
+    $response->assertOk()
+        ->assertJsonStructure(['options' => ['challenge', 'rpId']])
+        ->assertJsonPath('options.rpId', 'localhost');
+});

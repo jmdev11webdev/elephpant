@@ -29,9 +29,41 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->configureLocalPasskeys();
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
+    }
+
+    /**
+     * Ensure WebAuthn passkeys work seamlessly across local localhost ports.
+     */
+    private function configureLocalPasskeys(): void
+    {
+        if (! $this->app->isLocal() || $this->app->runningInConsole()) {
+            return;
+        }
+
+        $request = request();
+
+        if ($request->getHost() !== 'localhost') {
+            return;
+        }
+
+        $origin = $request->getSchemeAndHttpHost();
+        /** @var array<int, string> $allowedOrigins */
+        $allowedOrigins = config('passkeys.allowed_origins', []);
+
+        if (! in_array($origin, $allowedOrigins, true)) {
+            $allowedOrigins[] = $origin;
+        }
+
+        config([
+            'fortify.passkeys.relying_party_id' => 'localhost',
+            'fortify.passkeys.allowed_origins' => $allowedOrigins,
+            'passkeys.relying_party_id' => 'localhost',
+            'passkeys.allowed_origins' => $allowedOrigins,
+        ]);
     }
 
     /**
