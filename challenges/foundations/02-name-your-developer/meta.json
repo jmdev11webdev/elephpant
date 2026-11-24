@@ -1,0 +1,20 @@
+{
+    "id": "name-your-developer",
+    "slug": "name-your-developer",
+    "title": "Name Your Developer",
+    "discipline": "foundations",
+    "category": "PHP Basics • Variables & Types",
+    "difficulty": "foundations",
+    "order": 2,
+    "evaluationType": "code_execution",
+    "supportedLanguages": ["php"],
+    "xpReward": 40,
+    "estimatedMinutes": 4,
+    "skillKey": "algorithms-data-structures",
+    "mapTriggerId": null,
+    "hints": [
+        "PHP variables begin with `$`. Text literals use quotes (`string`), whole numbers do not (`int`), and booleans use `true` or `false` (`bool`).",
+        "Assign each scalar variable before returning: `$name = 'Ada';`, `$level = 1;`, `$isReady = true;`.",
+        "```php\n$name = 'Ada';\n$level = 1;\n$isReady = true;\n\nreturn ['name' => $name, 'level' => $level, 'isReady' => $isReady];\n```"
+    ]
+}

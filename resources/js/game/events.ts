@@ -8,10 +8,35 @@ export interface ShowDialoguePayload {
 
 export interface OpenChallengeCenterPayload {
     source?: string;
+    discipline?: string;
 }
 
 export interface OpenChallengePayload {
     challengeId: string;
+}
+
+export interface ResumeOverworldPayload {
+    completedChallengeId?: string;
+    unlockedTriggerId?: string | null;
+    xpAwarded?: number;
+}
+
+export interface PlayerLocationPayload {
+    zone: string;
+    x: number;
+    y: number;
+    mapWidth: number;
+    mapHeight: number;
+    facing: 'up' | 'down' | 'left' | 'right';
+    transitioned: boolean;
+}
+
+export interface LoadWorldStatePayload {
+    zone: string;
+    x: number;
+    y: number;
+    facing: 'up' | 'down' | 'left' | 'right';
+    unlockedTerminals?: string[];
 }
 
 export interface GameEventMap {
@@ -19,7 +44,9 @@ export interface GameEventMap {
     'open-challenge-center': OpenChallengeCenterPayload;
     'open-challenge': OpenChallengePayload;
     'pause-overworld': void;
-    'resume-overworld': void;
+    'resume-overworld': ResumeOverworldPayload | undefined;
+    'player-location-changed': PlayerLocationPayload;
+    'load-world-state': LoadWorldStatePayload;
 }
 
 type EventKey = keyof GameEventMap;
@@ -66,7 +93,11 @@ class TypedGameEventBus {
 
     public emit<K extends EventKey>(
         event: K,
-        ...args: GameEventMap[K] extends void ? [] : [payload: GameEventMap[K]]
+        ...args: GameEventMap[K] extends void
+            ? []
+            : undefined extends GameEventMap[K]
+              ? [payload?: GameEventMap[K]]
+              : [payload: GameEventMap[K]]
     ): void {
         const set = this.listeners.get(event);
 

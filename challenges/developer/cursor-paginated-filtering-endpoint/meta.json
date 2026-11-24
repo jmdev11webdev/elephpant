@@ -1,0 +1,22 @@
+{
+    "id": "cursor-paginated-filtering-endpoint",
+    "slug": "cursor-paginated-filtering-endpoint",
+    "title": "Cursor-Paginated Filtering Endpoint",
+    "discipline": "developer",
+    "district": "artisan-city",
+    "category": "API Pagination & Querying",
+    "difficulty": "advanced",
+    "order": 4,
+    "evaluationType": "code_modification",
+    "supportedLanguages": ["php"],
+    "xpReward": 220,
+    "estimatedMinutes": 15,
+    "skillKey": "backend-apis",
+    "mapTriggerId": null,
+    "terminalKey": "artisan-city-cursor-terminal",
+    "hints": [
+        "Filter by `$status` and `$afterId` first, then sort ascending with `usort($filtered, fn ($a, $b) => $a['id'] <=> $b['id'])`.",
+        "Slice `$pageSize = max(1, $limit)` items; `nextCursor` is non-null only if `count($filtered) > $pageSize`.",
+        "```php\n$page = array_slice($filtered, 0, $pageSize);\n$hasMore = count($filtered) > $pageSize;\n$nextCursor = $hasMore && $page !== [] ? $page[array_key_last($page)]['id'] : null;\n```"
+    ]
+}

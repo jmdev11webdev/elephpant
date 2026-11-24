@@ -1,0 +1,22 @@
+{
+    "id": "rate-limit-sliding-window",
+    "slug": "rate-limit-sliding-window",
+    "title": "Rate-Limit Sliding Window",
+    "discipline": "programmer",
+    "district": "algorithm-woods",
+    "category": "Queues & Rate Limiting",
+    "difficulty": "advanced",
+    "order": 4,
+    "evaluationType": "code_execution",
+    "supportedLanguages": ["php"],
+    "xpReward": 220,
+    "estimatedMinutes": 15,
+    "skillKey": "algorithms-data-structures",
+    "mapTriggerId": "algorithm-woods-pavilion",
+    "terminalKey": "algorithm-woods-pavilion",
+    "hints": [
+        "Store an array of active request timestamps keyed by `$clientId`.",
+        "Before checking `count($entries) >= $this->maxRequests`, filter out any timestamp `<= $timestamp - $this->windowSeconds`.",
+        "```php\n$cutoff = $timestamp - $this->windowSeconds;\n$active = array_values(array_filter($this->hits[$clientId] ?? [], fn (int $t) => $t > $cutoff));\nif (count($active) >= $this->maxRequests) return false;\n$active[] = $timestamp;\n$this->hits[$clientId] = $active;\nreturn true;\n```"
+    ]
+}

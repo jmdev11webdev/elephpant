@@ -1,0 +1,20 @@
+{
+    "id": "build-a-mini-tool",
+    "slug": "build-a-mini-tool",
+    "title": "Build a Mini Tool",
+    "discipline": "foundations",
+    "category": "PHP Basics • Functions",
+    "difficulty": "foundations",
+    "order": 7,
+    "evaluationType": "code_execution",
+    "supportedLanguages": ["php"],
+    "xpReward": 55,
+    "estimatedMinutes": 5,
+    "skillKey": "algorithms-data-structures",
+    "mapTriggerId": null,
+    "hints": [
+        "Clean the incoming `$name` parameter with `trim($name)` and return the interpolated greeting string.",
+        "Store `$cleanName = trim($name);` and return `\"Hello, {$cleanName}!\"` without overwriting `$name` with a literal string.",
+        "```php\n$cleanName = trim($name);\n\nreturn \"Hello, {$cleanName}!\";\n```"
+    ]
+}

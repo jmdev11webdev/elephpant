@@ -1,0 +1,20 @@
+{
+    "id": "your-first-backpack",
+    "slug": "your-first-backpack",
+    "title": "Your First Backpack",
+    "discipline": "foundations",
+    "category": "PHP Basics • Arrays",
+    "difficulty": "foundations",
+    "order": 5,
+    "evaluationType": "code_execution",
+    "supportedLanguages": ["php"],
+    "xpReward": 50,
+    "estimatedMinutes": 5,
+    "skillKey": "algorithms-data-structures",
+    "mapTriggerId": null,
+    "hints": [
+        "Access the associative key `$bag['items']`, read index `0` for the first item, and append with `$items[] = $newItem;`.",
+        "Assign `$first = $items[0];` and push `$newItem` using `$items[] = $newItem;` without overwriting `$bag` or `$newItem`.",
+        "```php\n$items = $bag['items'];\n$first = $items[0];\n$items[] = $newItem;\n\nreturn ['first' => $first, 'items' => $items];\n```"
+    ]
+}

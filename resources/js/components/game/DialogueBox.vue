@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { audioManager } from '@/game/audio/AudioManager';
 import type { ShowDialoguePayload } from '@/game/events';
 
 const props = defineProps<{
@@ -11,12 +12,18 @@ const emit = defineEmits<{
 }>();
 
 const currentIndex = ref(0);
+const visibleChars = ref(0);
 let openedAt = 0;
+let typingTimer: number | null = null;
 
 const totalLines = computed(() => Math.max(props.dialogue.lines.length, 1));
 const currentLine = computed(
     () => props.dialogue.lines[currentIndex.value] ?? '',
 );
+const displayedLine = computed(() =>
+    currentLine.value.slice(0, visibleChars.value),
+);
+const isTyping = computed(() => visibleChars.value < currentLine.value.length);
 const isLastLine = computed(() => currentIndex.value >= totalLines.value - 1);
 
 const badgeLabel = computed(() => {
@@ -46,24 +53,67 @@ const badgeAccentClass = computed(() => {
     }
 });
 
+function stopTyping(): void {
+    if (typingTimer !== null) {
+        window.clearInterval(typingTimer);
+        typingTimer = null;
+    }
+}
+
+function startTyping(): void {
+    stopTyping();
+    visibleChars.value = 0;
+    const text = currentLine.value;
+
+    if (text.length === 0) {
+        return;
+    }
+
+    typingTimer = window.setInterval(() => {
+        visibleChars.value += 1;
+        const ch = text[visibleChars.value - 1];
+        if (ch && ch !== ' ') {
+            audioManager.playSfx('dialogueBlip');
+        }
+        if (visibleChars.value >= text.length) {
+            stopTyping();
+        }
+    }, 20);
+}
+
 watch(
     () => props.dialogue,
     () => {
         currentIndex.value = 0;
         openedAt = performance.now();
+        startTyping();
     },
 );
 
+watch(currentIndex, () => {
+    startTyping();
+});
+
 function advance(): void {
+    if (isTyping.value) {
+        stopTyping();
+        visibleChars.value = currentLine.value.length;
+        return;
+    }
+
     if (isLastLine.value) {
+        audioManager.playSfx('uiCancel');
         emit('close');
         return;
     }
 
+    audioManager.playSfx('uiConfirm');
     currentIndex.value += 1;
 }
 
 function dismiss(): void {
+    stopTyping();
+    audioManager.playSfx('uiCancel');
     emit('close');
 }
 
@@ -96,10 +146,12 @@ function handleKeydown(event: KeyboardEvent): void {
 
 onMounted(() => {
     openedAt = performance.now();
+    startTyping();
     window.addEventListener('keydown', handleKeydown);
 });
 
 onUnmounted(() => {
+    stopTyping();
     window.removeEventListener('keydown', handleKeydown);
 });
 </script>
@@ -126,7 +178,7 @@ onUnmounted(() => {
             <p
                 class="mt-1 min-h-[2.75rem] text-xs leading-relaxed text-slate-100 sm:min-h-[3.25rem] sm:text-sm"
             >
-                {{ currentLine }}
+                {{ displayedLine }}
             </p>
 
             <div
@@ -136,9 +188,11 @@ onUnmounted(() => {
                 <span class="flex items-center gap-2 text-indigo-300">
                     <span>
                         {{
-                            isLastLine
-                                ? 'Space / Enter / Click to close'
-                                : 'Space / Enter / Click to continue'
+                            isTyping
+                                ? 'Space / Click to skip'
+                                : isLastLine
+                                  ? 'Space / Enter / Click to close'
+                                  : 'Space / Enter / Click to continue'
                         }}
                     </span>
                     <span class="animate-pulse font-bold text-amber-300">

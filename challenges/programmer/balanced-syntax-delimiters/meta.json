@@ -1,0 +1,22 @@
+{
+    "id": "balanced-syntax-delimiters",
+    "slug": "balanced-syntax-delimiters",
+    "title": "Balanced Syntax Delimiters",
+    "discipline": "programmer",
+    "district": "algorithm-woods",
+    "category": "Stacks & Parsing",
+    "difficulty": "beginner",
+    "order": 2,
+    "evaluationType": "code_execution",
+    "supportedLanguages": ["php"],
+    "xpReward": 110,
+    "estimatedMinutes": 8,
+    "skillKey": "algorithms-data-structures",
+    "mapTriggerId": null,
+    "terminalKey": "algorithm-woods-delimiter-terminal",
+    "hints": [
+        "Push opening delimiters `(`, `[`, `{` onto an array stack and pop when you encounter a closing delimiter.",
+        "Map each closing delimiter to its expected opener (`')' => '('`, `']' => '['`, `'}' => '{'`) and return `false` on any mismatch or empty pop.",
+        "```php\n$pairs = [')' => '(', ']' => '[', '}' => '{'];\n// Push openers; on closer, check array_pop($stack) === $pairs[$ch].\nreturn $stack === [];\n```"
+    ]
+}

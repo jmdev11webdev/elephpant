@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, FolderGit2, LayoutGrid } from '@lucide/vue';
+import {
+    BookOpen,
+    FolderGit2,
+    Gamepad2,
+    LayoutGrid,
+    Library,
+} from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -14,7 +20,8 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
+import { dashboard, play } from '@/routes';
+import { index as resourcesIndex } from '@/routes/resources';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
@@ -23,17 +30,27 @@ const mainNavItems: NavItem[] = [
         href: dashboard(),
         icon: LayoutGrid,
     },
+    {
+        title: 'Play World',
+        href: play(),
+        icon: Gamepad2,
+    },
+    {
+        title: 'Resources',
+        href: resourcesIndex(),
+        icon: Library,
+    },
 ];
 
 const footerNavItems: NavItem[] = [
     {
         title: 'Repository',
-        href: 'https://github.com/laravel/vue-starter-kit',
+        href: 'https://www.github.com/jmdev11webdev/elephpant',
         icon: FolderGit2,
     },
     {
         title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
+        href: '/docs/index.html',
         icon: BookOpen,
     },
 ];
@@ -44,7 +61,11 @@ const footerNavItems: NavItem[] = [
         <SidebarHeader>
             <SidebarMenu>
                 <SidebarMenuItem>
-                    <SidebarMenuButton size="lg" as-child>
+                    <SidebarMenuButton
+                        size="lg"
+                        class="h-auto py-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-1.5!"
+                        as-child
+                    >
                         <Link :href="dashboard()">
                             <AppLogo />
                         </Link>

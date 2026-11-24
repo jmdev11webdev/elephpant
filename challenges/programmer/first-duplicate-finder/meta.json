@@ -1,0 +1,22 @@
+{
+    "id": "first-duplicate-finder",
+    "slug": "first-duplicate-finder",
+    "title": "First Duplicate Finder",
+    "discipline": "programmer",
+    "district": "algorithm-woods",
+    "category": "Arrays & Hashing",
+    "difficulty": "beginner",
+    "order": 1,
+    "evaluationType": "code_execution",
+    "supportedLanguages": ["php"],
+    "xpReward": 120,
+    "estimatedMinutes": 8,
+    "skillKey": "algorithms-data-structures",
+    "mapTriggerId": "algorithm-woods-bridge",
+    "terminalKey": "algorithm-woods-bridge",
+    "hints": [
+        "Store each encountered integer as a key in an associative array `$seen = []` for `O(1)` lookup.",
+        "Before recording `$seen[$number] = true;`, check `if (isset($seen[$number]))` and return `$number` immediately.",
+        "```php\n$seen = [];\nforeach ($numbers as $number) {\n    if (isset($seen[$number])) {\n        return $number;\n    }\n    $seen[$number] = true;\n}\nreturn null;\n```"
+    ]
+}

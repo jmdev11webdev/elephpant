@@ -1,5 +1,16 @@
 import Phaser from 'phaser';
+import { gameEvents } from '@/game/events';
 import type { MapSceneData } from '@/game/scenes/BaseMapScene';
+import { zoneToMapKey } from '@/game/worldState';
+import type { WorldStateSnapshot } from '@/game/worldState';
+
+const INTERIOR_MAPS = new Set([
+    'challenge-center',
+    'starter-house',
+    'logic-pavilion',
+    'billing-guild',
+    'security-warehouse',
+]);
 
 export class MainScene extends Phaser.Scene {
     private hasStarted = false;
@@ -30,8 +41,36 @@ export class MainScene extends Phaser.Scene {
             '/assets/maps/localhost-town.json',
         );
         this.load.tilemapTiledJSON(
+            'algorithm-woods',
+            '/assets/maps/algorithm-woods.json',
+        );
+        this.load.tilemapTiledJSON(
+            'artisan-city',
+            '/assets/maps/artisan-city.json',
+        );
+        this.load.tilemapTiledJSON(
+            'legacy-harbor',
+            '/assets/maps/legacy-harbor.json',
+        );
+        this.load.tilemapTiledJSON(
             'challenge-center',
             '/assets/maps/challenge-center.json',
+        );
+        this.load.tilemapTiledJSON(
+            'starter-house',
+            '/assets/maps/starter-house.json',
+        );
+        this.load.tilemapTiledJSON(
+            'logic-pavilion',
+            '/assets/maps/logic-pavilion.json',
+        );
+        this.load.tilemapTiledJSON(
+            'billing-guild',
+            '/assets/maps/billing-guild.json',
+        );
+        this.load.tilemapTiledJSON(
+            'security-warehouse',
+            '/assets/maps/security-warehouse.json',
         );
     }
 
@@ -116,6 +155,38 @@ export class MainScene extends Phaser.Scene {
         this.input.once('pointerdown', () => {
             this.startGame();
         });
+
+        const unsubscribeLoad = gameEvents.on('load-world-state', (payload) => {
+            if (payload.unlockedTerminals) {
+                const state = this.registry.get('worldState') as
+                    | WorldStateSnapshot
+                    | undefined;
+                if (state) {
+                    this.registry.set('worldState', {
+                        ...state,
+                        unlockedTriggers: [...payload.unlockedTerminals],
+                    });
+                }
+            }
+
+            const mapKey = zoneToMapKey(payload.zone);
+            const targetScene = INTERIOR_MAPS.has(mapKey)
+                ? 'InteriorScene'
+                : 'OverworldScene';
+
+            this.hasStarted = true;
+            this.scene.start(targetScene, {
+                mapKey,
+                tileX: payload.x,
+                tileY: payload.y,
+                facing: payload.facing,
+                transitioned: false,
+            } satisfies MapSceneData);
+        });
+
+        this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+            unsubscribeLoad();
+        });
     }
 
     private registerPlayerAnimations(): void {
@@ -149,14 +220,26 @@ export class MainScene extends Phaser.Scene {
             return;
         }
 
+        const worldState = this.registry.get('worldState') as
+            | WorldStateSnapshot
+            | undefined;
+        const resume = worldState?.resume;
+        const mapKey = resume ? zoneToMapKey(resume.zone) : 'localhost-town';
+        const targetScene = INTERIOR_MAPS.has(mapKey)
+            ? 'InteriorScene'
+            : 'OverworldScene';
+
         this.hasStarted = true;
         this.cameras.main.once(
             Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE,
             () => {
-                this.scene.start('OverworldScene', {
-                    mapKey: 'localhost-town',
+                this.scene.start(targetScene, {
+                    mapKey,
                     spawnId: 'default',
-                    facing: 'down',
+                    tileX: resume?.fromSlot !== null ? resume?.x : undefined,
+                    tileY: resume?.fromSlot !== null ? resume?.y : undefined,
+                    facing: resume?.facing ?? 'down',
+                    transitioned: false,
                 } satisfies MapSceneData);
             },
         );

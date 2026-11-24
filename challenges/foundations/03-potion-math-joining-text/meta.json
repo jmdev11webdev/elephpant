@@ -1,0 +1,20 @@
+{
+    "id": "potion-math-joining-text",
+    "slug": "potion-math-joining-text",
+    "title": "Potion Math & Joining Text",
+    "discipline": "foundations",
+    "category": "PHP Basics • Arithmetic & Strings",
+    "difficulty": "foundations",
+    "order": 3,
+    "evaluationType": "code_execution",
+    "supportedLanguages": ["php"],
+    "xpReward": 45,
+    "estimatedMinutes": 4,
+    "skillKey": "algorithms-data-structures",
+    "mapTriggerId": null,
+    "hints": [
+        "Use the `*` operator to multiply the incoming `$price` and `$qty` parameters, then interpolate both `$qty` and `$totalCost` into a double-quoted string.",
+        "Assign `$totalCost = $price * $qty;` and return `\"{$qty} potions cost {$totalCost} coins\"` without reassigning `$price` or `$qty`.",
+        "```php\n$totalCost = $price * $qty;\n\nreturn \"{$qty} potions cost {$totalCost} coins\";\n```"
+    ]
+}

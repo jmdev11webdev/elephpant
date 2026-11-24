@@ -1,0 +1,20 @@
+{
+    "id": "your-first-bug-fix",
+    "slug": "your-first-bug-fix",
+    "title": "Your First Bug Fix",
+    "discipline": "foundations",
+    "category": "PHP Basics • Debugging",
+    "difficulty": "foundations",
+    "order": 8,
+    "evaluationType": "debugging",
+    "supportedLanguages": ["php"],
+    "xpReward": 60,
+    "estimatedMinutes": 5,
+    "skillKey": "debugging-refactoring",
+    "mapTriggerId": null,
+    "hints": [
+        "There are two defects in this 4-line script: one missing semicolon (`;`) and one misspelled variable name.",
+        "Add `;` at the end of `$town = 'Localhost Town'` and fix `$devNmae` to `$devName` inside the `echo` string.",
+        "```php\n$devName = 'Ada';\n$town = 'Localhost Town';\n$badge = 'Syntax Awakened';\necho \"{$devName} graduated in {$town} with {$badge}!\";\n```"
+    ]
+}

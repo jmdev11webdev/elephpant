@@ -1,0 +1,22 @@
+{
+    "id": "partial-payment-ledger",
+    "slug": "partial-payment-ledger",
+    "title": "Partial Payment Ledger",
+    "discipline": "developer",
+    "district": "artisan-city",
+    "category": "Domain Logic & Multi-File Services",
+    "difficulty": "intermediate",
+    "order": 3,
+    "evaluationType": "code_execution",
+    "supportedLanguages": ["php"],
+    "xpReward": 180,
+    "estimatedMinutes": 12,
+    "skillKey": "backend-apis",
+    "mapTriggerId": "artisan-city-billing-guild",
+    "terminalKey": "artisan-city-billing-guild",
+    "hints": [
+        "Filter `$payments` to include only entries where `$payment->status === 'settled'` and `$payment->amountCents > 0`.",
+        "Sum valid settled amounts and subtract from `$invoiceTotalCents`, then clamp with `max(0, $remaining)`.",
+        "```php\n$paid = 0;\nforeach ($payments as $p) {\n    if ($p->status === 'settled' && $p->amountCents > 0) {\n        $paid += $p->amountCents;\n    }\n}\nreturn max(0, $invoiceTotalCents - $paid);\n```"
+    ]
+}

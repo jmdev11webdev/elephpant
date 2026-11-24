@@ -1,0 +1,22 @@
+{
+    "id": "off-by-one-date-timezone-bug",
+    "slug": "off-by-one-date-timezone-bug",
+    "title": "Off-by-One Date & Timezone Bug",
+    "discipline": "maintainer",
+    "district": "legacy-harbor",
+    "category": "Debugging & Timezones",
+    "difficulty": "beginner",
+    "order": 1,
+    "evaluationType": "debugging",
+    "supportedLanguages": ["php"],
+    "xpReward": 110,
+    "estimatedMinutes": 8,
+    "skillKey": "debugging-refactoring",
+    "mapTriggerId": null,
+    "terminalKey": "legacy-harbor-timezone-terminal",
+    "hints": [
+        "Construct `DateTimeImmutable` with an explicit `DateTimeZone('UTC')` rather than relying on the system default timezone.",
+        "Call `->setTimezone(new DateTimeZone($targetTimezone))` before formatting with `->format('Y-m-d')`.",
+        "```php\nreturn (new DateTimeImmutable($utcIsoTimestamp, new DateTimeZone('UTC')))\n    ->setTimezone(new DateTimeZone($targetTimezone))\n    ->format('Y-m-d');\n```"
+    ]
+}

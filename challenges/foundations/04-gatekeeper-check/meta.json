@@ -1,0 +1,20 @@
+{
+    "id": "gatekeeper-check",
+    "slug": "gatekeeper-check",
+    "title": "The Gatekeeper Check",
+    "discipline": "foundations",
+    "category": "PHP Basics • Conditionals",
+    "difficulty": "foundations",
+    "order": 4,
+    "evaluationType": "code_execution",
+    "supportedLanguages": ["php"],
+    "xpReward": 45,
+    "estimatedMinutes": 4,
+    "skillKey": "algorithms-data-structures",
+    "mapTriggerId": null,
+    "hints": [
+        "Use an `if` statement to evaluate whether `$xp` is greater than or equal to `100` (`>= 100`).",
+        "Check `if ($xp >= 100)` to return `'Gate Open'`; otherwise return `'Gate Locked'`.",
+        "```php\nif ($xp >= 100) {\n    return 'Gate Open';\n}\n\nreturn 'Gate Locked';\n```"
+    ]
+}

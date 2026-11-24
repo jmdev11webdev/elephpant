@@ -1,0 +1,20 @@
+{
+    "id": "hello-elephpant",
+    "slug": "hello-elephpant",
+    "title": "Hello, elePHPant!",
+    "discipline": "foundations",
+    "category": "PHP Basics • Output",
+    "difficulty": "foundations",
+    "order": 1,
+    "evaluationType": "code_execution",
+    "supportedLanguages": ["php"],
+    "xpReward": 40,
+    "estimatedMinutes": 3,
+    "skillKey": "algorithms-data-structures",
+    "mapTriggerId": null,
+    "hints": [
+        "Every PHP script starts with `<?php`, and the `echo` construct prints string output to stdout.",
+        "Wrap the text in quotes and terminate the statement with a semicolon: `echo \"...\";`",
+        "```php\n<?php\n\necho \"Hello, elePHPant!\";\n```"
+    ]
+}

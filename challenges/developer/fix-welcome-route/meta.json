@@ -1,0 +1,22 @@
+{
+    "id": "fix-welcome-route",
+    "slug": "fix-welcome-route",
+    "title": "Fix the Welcome Route",
+    "discipline": "developer",
+    "district": "artisan-city",
+    "category": "Routing & HTTP Responses",
+    "difficulty": "beginner",
+    "order": 1,
+    "evaluationType": "debugging",
+    "supportedLanguages": ["php"],
+    "xpReward": 100,
+    "estimatedMinutes": 5,
+    "skillKey": "backend-apis",
+    "mapTriggerId": "localhost-challenge-center",
+    "terminalKey": "localhost-challenge-center",
+    "hints": [
+        "Inspect the HTTP status code and payload keys returned by `handleWelcomeRoute()`.",
+        "Trim `$playerName` and default to `'Adventurer'` when the trimmed string is empty; ensure `'region'` is `'The Stack Region'` and `'state'` is `'online'`.",
+        "```php\n$clean = trim($playerName);\n$display = $clean !== '' ? $clean : 'Adventurer';\nreturn ['status' => 200, 'body' => ['message' => \"Welcome to Localhost Town, {$display}!\", 'region' => 'The Stack Region', 'state' => 'online']];\n```"
+    ]
+}

@@ -1,0 +1,37 @@
+{
+    "id": "concurrent-stock-deduction-race",
+    "slug": "concurrent-stock-deduction-race",
+    "title": "Concurrent Stock Deduction Race",
+    "discipline": "maintainer",
+    "district": "legacy-harbor",
+    "category": "Concurrency & Data Integrity",
+    "difficulty": "expert",
+    "order": 5,
+    "evaluationType": "technical_decision",
+    "supportedLanguages": ["php"],
+    "xpReward": 320,
+    "estimatedMinutes": 25,
+    "skillKey": "testing-security",
+    "mapTriggerId": null,
+    "terminalKey": "legacy-harbor-stock-terminal",
+    "hints": [
+        "Guard against invalid quantities (`$quantity <= 0`) and insufficient stock (`$this->available < $quantity`) before mutating `$this->available`.",
+        "Only decrement `$this->available -= $quantity;` when the guard passes, and choose pessimistic locking (`lockForUpdate`) or an atomic conditional `UPDATE ... WHERE stock >= ?` for production databases.",
+        "```php\nif ($quantity <= 0 || $this->available < $quantity) {\n    return false;\n}\n$this->available -= $quantity;\nreturn true;\n```"
+    ],
+    "decisionOptions": [
+        {
+            "id": "sleep-retry",
+            "label": "Add usleep(50000) before updating the stock row to space out requests."
+        },
+        {
+            "id": "atomic-lock-update",
+            "label": "Use a database transaction with pessimistic locking (lockForUpdate) or an atomic conditional UPDATE ... WHERE stock >= ?."
+        },
+        {
+            "id": "client-debounce",
+            "label": "Disable the checkout button in Vue for 2 seconds and keep non-atomic PHP updates."
+        }
+    ],
+    "correctDecisionId": "atomic-lock-update"
+}

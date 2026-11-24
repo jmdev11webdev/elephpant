@@ -1,0 +1,22 @@
+{
+    "id": "form-request-payload-normalizer",
+    "slug": "form-request-payload-normalizer",
+    "title": "Form Request Payload Normalizer",
+    "discipline": "developer",
+    "district": "artisan-city",
+    "category": "Validation & Sanitization",
+    "difficulty": "beginner",
+    "order": 2,
+    "evaluationType": "code_execution",
+    "supportedLanguages": ["php"],
+    "xpReward": 120,
+    "estimatedMinutes": 8,
+    "skillKey": "backend-apis",
+    "mapTriggerId": null,
+    "terminalKey": "artisan-city-normalizer-terminal",
+    "hints": [
+        "Use `preg_replace('/\\s+/', ' ', trim($name))` to collapse repeated spaces inside `'name'` and `strtolower(trim($email))` for `'email'`.",
+        "Normalize each tag with `strtolower(trim($tag))`, skip empty strings, and track seen tags to preserve first-seen order.",
+        "```php\n// Re-index unique tags with array_values() so the result is a list<string>.\n```"
+    ]
+}

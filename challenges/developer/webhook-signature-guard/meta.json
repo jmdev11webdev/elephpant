@@ -1,0 +1,22 @@
+{
+    "id": "webhook-signature-guard",
+    "slug": "webhook-signature-guard",
+    "title": "Webhook Signature Guard",
+    "discipline": "developer",
+    "district": "artisan-city",
+    "category": "API Security & Webhooks",
+    "difficulty": "expert",
+    "order": 5,
+    "evaluationType": "code_modification",
+    "supportedLanguages": ["php"],
+    "xpReward": 260,
+    "estimatedMinutes": 15,
+    "skillKey": "testing-security",
+    "mapTriggerId": "artisan-city-api-gateway",
+    "terminalKey": "artisan-city-api-gateway",
+    "hints": [
+        "Validate timestamp freshness first: `if (abs($now - $timestamp) > $toleranceSeconds) return false;`.",
+        "Build the signed payload string as `\"{$timestamp}.{$payload}\"` and hash it with `hash_hmac('sha256', $signedPayload, $secret)`.",
+        "```php\n$expected = hash_hmac('sha256', \"{$timestamp}.{$payload}\", $secret);\nreturn hash_equals($expected, $signature);\n```"
+    ]
+}

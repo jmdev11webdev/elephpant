@@ -1,0 +1,22 @@
+{
+    "id": "broken-partial-payment-regression",
+    "slug": "broken-partial-payment-regression",
+    "title": "Broken Partial-Payment Regression Fix",
+    "discipline": "maintainer",
+    "district": "legacy-harbor",
+    "category": "Debugging & Regression Fixes",
+    "difficulty": "intermediate",
+    "order": 2,
+    "evaluationType": "debugging",
+    "supportedLanguages": ["php"],
+    "xpReward": 180,
+    "estimatedMinutes": 10,
+    "skillKey": "debugging-refactoring",
+    "mapTriggerId": "legacy-harbor-dock-crane",
+    "terminalKey": "legacy-harbor-dock-crane",
+    "hints": [
+        "Inspect the loop inside `remainingAfterPayments()`—it currently overwrites `$paid` instead of adding to it.",
+        "Skip any entry `<= 0` and accumulate with `$paid += $payment;` before returning `max(0, $invoiceTotalCents - $paid)`.",
+        "```php\n$paid = 0;\nforeach ($paymentsCents as $payment) {\n    if ($payment > 0) {\n        $paid += $payment;\n    }\n}\nreturn max(0, $invoiceTotalCents - $paid);\n```"
+    ]
+}

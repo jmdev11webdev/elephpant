@@ -1,0 +1,37 @@
+{
+    "id": "unsafe-sql-query-audit",
+    "slug": "unsafe-sql-query-audit",
+    "title": "Unsafe SQL Query Audit",
+    "discipline": "maintainer",
+    "district": "legacy-harbor",
+    "category": "Security & Reliability",
+    "difficulty": "advanced",
+    "order": 4,
+    "evaluationType": "technical_decision",
+    "supportedLanguages": ["php", "sql"],
+    "xpReward": 250,
+    "estimatedMinutes": 15,
+    "skillKey": "testing-security",
+    "mapTriggerId": "legacy-harbor-security-warehouse",
+    "terminalKey": "legacy-harbor-security-warehouse",
+    "hints": [
+        "Never interpolate or concatenate user input directly into SQL strings—even with `addslashes()` or `str_replace()`.",
+        "Use a static SQL template with a named placeholder (`:email`) and pass `$email` inside the separate `'bindings'` array.",
+        "```php\nreturn [\n    'sql' => 'SELECT id, name, email FROM users WHERE email = :email',\n    'bindings' => ['email' => $email],\n];\n```"
+    ],
+    "decisionOptions": [
+        {
+            "id": "string-replace",
+            "label": "Strip single quotes using str_replace() before concatenating into SQL."
+        },
+        {
+            "id": "parameterized-bindings",
+            "label": "Use parameterized SQL placeholders with separate parameter bindings."
+        },
+        {
+            "id": "base64-encode",
+            "label": "Base64-encode the user email and interpolate it into the WHERE clause."
+        }
+    ],
+    "correctDecisionId": "parameterized-bindings"
+}

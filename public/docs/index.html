@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>elePHPant — Repository Documentation</title>
+        <link rel="stylesheet" href="./styles.css" />
+    </head>
+    <body>
+        <header class="topbar">
+            <div class="topbar-inner">
+                <a class="brand" href="#overview">
+                    <span class="brand-badge">
+                        <img
+                            src="/images/elephpant-logo.png"
+                            alt="elePHPant logo"
+                            class="brand-logo"
+                        />
+                    </span>
+                    <span>ele<span class="accent">PHP</span>ant Docs</span>
+                </a>
+
+                <div class="topbar-actions">
+                    <input
+                        id="doc-search"
+                        type="search"
+                        class="search-input"
+                        placeholder="Filter sections..."
+                        aria-label="Filter repository documentation sections"
+                    />
+                    <a
+                        class="repo-link"
+                        href="https://www.github.com/jmdev11webdev/elephpant"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        GitHub Repo ↗
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="layout">
+            <aside class="sidebar" aria-label="Documentation sections">
+                <p class="nav-heading">Repository Guide</p>
+                <nav id="section-nav" class="nav-list">
+                    <a href="#overview" class="nav-item active"
+                        >Overview &amp; Stack</a
+                    >
+                    <a href="#structure" class="nav-item"
+                        >Repository Structure</a
+                    >
+                    <a href="#setup" class="nav-item">Local WSL2 Setup</a>
+                    <a href="#sandbox" class="nav-item"
+                        >Sandbox &amp; Challenges</a
+                    >
+                    <a href="#scripts" class="nav-item"
+                        >Quality &amp; Test Commands</a
+                    >
+                    <a href="#contributing" class="nav-item"
+                        >Contributing Workflow</a
+                    >
+                </nav>
+            </aside>
+
+            <main class="content">
+                <section
+                    id="overview"
+                    class="doc-section"
+                    data-keywords="overview stack laravel vue inertia phaser monaco repository"
+                >
+                    <span class="pill">REPOSITORY DOCUMENTATION</span>
+                    <h1>elePHPant Repository Guide</h1>
+                    <p class="lead">
+                        Technical reference for the
+                        <a
+                            href="https://www.github.com/jmdev11webdev/elephpant"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            jmdev11webdev/elephpant
+                        </a>
+                        repository—covering architecture boundaries, folder
+                        layout, local WSL2 setup, sandbox commands, and
+                        contributor checks.
+                    </p>
+
+                    <div class="card-grid">
+                        <article class="card">
+                            <h3>Backend</h3>
+                            <p>
+                                Laravel 13 (PHP 8.3+), Fortify authentication
+                                (email verification disabled), Wayfinder typed
+                                routes, SQLite / PostgreSQL.
+                            </p>
+                        </article>
+                        <article class="card">
+                            <h3>Frontend Shell</h3>
+                            <p>
+                                Vue 3 + TypeScript + Inertia.js v3 + Tailwind
+                                CSS v4 + Vite+, hosting <code>/dashboard</code>,
+                                <code>/play</code>, and <code>/resources</code>.
+                            </p>
+                        </article>
+                        <article class="card">
+                            <h3>Game &amp; IDE</h3>
+                            <p>
+                                Phaser 3.90.0 (Tsugumi) 16-bit engine decoupled
+                                via a typed event bus, paired with an embedded
+                                Monaco Editor workspace.
+                            </p>
+                        </article>
+                    </div>
+                </section>
+
+                <section
+                    id="structure"
+                    class="doc-section"
+                    data-keywords="structure folders directory layout files app challenges config public resources tests"
+                >
+                    <h2>Repository Structure</h2>
+                    <p>
+                        Strict separation of concerns keeps Laravel, Vue,
+                        Phaser, and challenge content independent:
+                    </p>
+                    <pre class="code-block"><code>elephpant/
+├── app/
+│   ├── Console/Commands/       # php artisan challenges:sync
+│   ├── Contracts/              # ChallengeRunnerInterface.php
+│   ├── Http/Controllers/       # Dashboard, Resource, Challenge, Title controllers
+│   ├── Models/                 # User, Challenge, ChallengeSubmission, progression models
+│   └── Services/               # PlayerProgressOverview, ProgressionService, Sandbox drivers
+├── challenges/                 # Decoupled challenge bundles (&lt;discipline&gt;/&lt;slug&gt;/)
+├── config/
+│   ├── fortify.php             # Auth &amp; local WebAuthn passkeys config
+│   ├── resources.php           # Static curated PHP/Laravel resource catalog
+│   └── sandbox.php             # Piston / fake sandbox driver configuration
+├── public/
+│   ├── assets/                 # 16×16 pixel-art tilesets, sprites, and Tiled JSON maps
+│   └── docs/                   # Standalone HTML/CSS/JS repository documentation
+├── resources/js/
+│   ├── components/game/        # PhaserGame.vue, DialogueBox.vue
+│   ├── components/ide/         # ChallengeCenterModal.vue, MonacoCodeEditor.vue
+│   ├── game/                   # config.ts, events.ts, scenes/ (Phaser-only layer)
+│   └── pages/                  # Welcome.vue, Dashboard.vue, Play.vue, Resources.vue
+├── tests/                      # Pest feature &amp; unit tests
+└── docker-compose.sandbox.yml  # Isolated WSL2 Piston Docker sandbox</code></pre>
+                </section>
+
+                <section
+                    id="setup"
+                    class="doc-section"
+                    data-keywords="install setup wsl2 debian composer npm migrate dev server localhost passkey"
+                >
+                    <h2>Local WSL2 (Debian) Setup</h2>
+                    <p>
+                        Clone the repository and bootstrap PHP + Node
+                        dependencies:
+                    </p>
+
+                    <div class="command-box">
+                        <pre><code>git clone https://github.com/jmdev11webdev/elephpant.git
+cd elephpant
+composer setup</code></pre>
+                        <button
+                            type="button"
+                            class="copy-btn"
+                            data-copy="git clone https://github.com/jmdev11webdev/elephpant.git&#10;cd elephpant&#10;composer setup"
+                        >
+                            Copy
+                        </button>
+                    </div>
+
+                    <p>Run the Laravel server and Vite dev server together:</p>
+                    <div class="command-box">
+                        <pre><code>composer run dev</code></pre>
+                        <button
+                            type="button"
+                            class="copy-btn"
+                            data-copy="composer run dev"
+                        >
+                            Copy
+                        </button>
+                    </div>
+
+                    <p class="note">
+                        <strong>Local Passkeys Note:</strong> Visit
+                        <code>http://localhost:8000</code> (instead of
+                        <code>127.0.0.1</code>) so browser WebAuthn allows local
+                        passkey registration and login.
+                    </p>
+                </section>
+
+                <section
+                    id="sandbox"
+                    class="doc-section"
+                    data-keywords="sandbox docker piston challenges sync isolated execution"
+                >
+                    <h2>Sandbox &amp; Challenge Sync</h2>
+                    <p>
+                        Sync version-controlled challenge bundles into SQLite or
+                        PostgreSQL:
+                    </p>
+                    <div class="command-box">
+                        <pre><code>php artisan migrate
+php artisan challenges:sync</code></pre>
+                        <button
+                            type="button"
+                            class="copy-btn"
+                            data-copy="php artisan migrate&#10;php artisan challenges:sync"
+                        >
+                            Copy
+                        </button>
+                    </div>
+
+                    <p>
+                        Pull and verify the hardened ephemeral PHP 8.5.13 Docker
+                        sandbox image (network disabled, read-only root,
+                        non-root UID 65534, cgroup v2 limits):
+                    </p>
+                    <div class="command-box">
+                        <pre><code>docker compose -f docker-compose.sandbox.yml pull
+docker compose -f docker-compose.sandbox.yml run --rm php-sandbox php -v</code></pre>
+                        <button
+                            type="button"
+                            class="copy-btn"
+                            data-copy="docker compose -f docker-compose.sandbox.yml pull&#10;docker compose -f docker-compose.sandbox.yml run --rm php-sandbox php -v"
+                        >
+                            Copy
+                        </button>
+                    </div>
+                </section>
+
+                <section
+                    id="scripts"
+                    class="doc-section"
+                    data-keywords="test pint phpstan types lint build check quality ci"
+                >
+                    <h2>Quality, Lint &amp; Test Commands</h2>
+                    <p>
+                        Run these checks before opening a pull request or
+                        tagging a milestone:
+                    </p>
+                    <div class="command-box">
+                        <pre><code>vendor/bin/pint --dirty --format agent
+npm run check
+npm run types:check
+npm run build
+composer types:check
+php artisan test --compact</code></pre>
+                        <button
+                            type="button"
+                            class="copy-btn"
+                            data-copy="vendor/bin/pint --dirty --format agent&#10;npm run check&#10;npm run types:check&#10;npm run build&#10;composer types:check&#10;php artisan test --compact"
+                        >
+                            Copy
+                        </button>
+                    </div>
+                </section>
+
+                <section
+                    id="contributing"
+                    class="doc-section"
+                    data-keywords="contributing pull request issues branch license github"
+                >
+                    <h2>Contributing Workflow</h2>
+                    <ul class="bullet-list">
+                        <li>
+                            Fork or branch from <code>main</code> on
+                            <a
+                                href="https://www.github.com/jmdev11webdev/elephpant"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                >github.com/jmdev11webdev/elephpant</a
+                            >.
+                        </li>
+                        <li>
+                            Keep Phaser scenes decoupled from Vue, Inertia, and
+                            Monaco—use <code>resources/js/game/events.ts</code>.
+                        </li>
+                        <li>
+                            Store new challenges as standalone bundles in
+                            <code
+                                >challenges/&lt;discipline&gt;/&lt;slug&gt;/</code
+                            >
+                            with verified <code>solution/</code> files and
+                            public + hidden tests.
+                        </li>
+                        <li>
+                            Ensure all Pint, Larastan, TypeScript, Vite+
+                            lint/build, and Pest checks pass before submitting a
+                            PR.
+                        </li>
+                    </ul>
+                </section>
+
+                <footer class="doc-footer">
+                    <span
+                        >elePHPant Repository Documentation • Pure HTML, CSS
+                        &amp; JavaScript</span
+                    >
+                    <a
+                        href="https://www.github.com/jmdev11webdev/elephpant"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        github.com/jmdev11webdev/elephpant
+                    </a>
+                </footer>
+            </main>
+        </div>
+
+        <script src="./app.js"></script>
+    </body>
+</html>

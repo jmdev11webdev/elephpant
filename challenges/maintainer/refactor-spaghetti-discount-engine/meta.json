@@ -1,0 +1,22 @@
+{
+    "id": "refactor-spaghetti-discount-engine",
+    "slug": "refactor-spaghetti-discount-engine",
+    "title": "Refactor Spaghetti Discount Engine",
+    "discipline": "maintainer",
+    "district": "legacy-harbor",
+    "category": "Refactoring & Clean Code",
+    "difficulty": "intermediate",
+    "order": 3,
+    "evaluationType": "code_modification",
+    "supportedLanguages": ["php"],
+    "xpReward": 190,
+    "estimatedMinutes": 12,
+    "skillKey": "debugging-refactoring",
+    "mapTriggerId": null,
+    "terminalKey": "legacy-harbor-discount-terminal",
+    "hints": [
+        "Clamp `$percentOff = max(0, min(100, $percentOff))` and `$couponCents = max(0, $couponCents)` before computing discounts.",
+        "Enforce `$maxDiscount = (int) floor($subtotalCents * 0.5)` and apply `min($rawDiscount, $maxDiscount)`.",
+        "```php\n$effectiveDiscount = min($rawDiscount, (int) floor($subtotalCents * 0.5));\nreturn max(0, $subtotalCents - $effectiveDiscount);\n```"
+    ]
+}

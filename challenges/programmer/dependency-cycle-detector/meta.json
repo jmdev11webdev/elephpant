@@ -1,0 +1,22 @@
+{
+    "id": "dependency-cycle-detector",
+    "slug": "dependency-cycle-detector",
+    "title": "Dependency Cycle Detector",
+    "discipline": "programmer",
+    "district": "algorithm-woods",
+    "category": "Graphs & Topological Order",
+    "difficulty": "intermediate",
+    "order": 3,
+    "evaluationType": "code_execution",
+    "supportedLanguages": ["php"],
+    "xpReward": 180,
+    "estimatedMinutes": 15,
+    "skillKey": "algorithms-data-structures",
+    "mapTriggerId": null,
+    "terminalKey": "algorithm-woods-cycle-terminal",
+    "hints": [
+        "Track node states using three values: unvisited (`0`), currently visiting (`1`), and fully visited (`2`).",
+        "If DFS follows an edge to a node whose state is `1` (currently on the recursion stack), a cycle is present.",
+        "```php\n// Mark $state[$node] = 1 before recursing on $graph[$node] ?? [];\n// if (($state[$dep] ?? 0) === 1) return true;\n// Mark $state[$node] = 2 after all neighbors finish.\n```"
+    ]
+}

@@ -1,13 +1,24 @@
 import Phaser from 'phaser';
+import { audioManager } from '@/game/audio/AudioManager';
+import type { FootstepSurface } from '@/game/audio/AudioManager';
 import { resolveDialogue } from '@/game/dialogue';
 import { gameEvents } from '@/game/events';
+import {
+    DEFAULT_WORLD_STATE,
+    mapKeyToZone,
+    zoneToMapKey,
+} from '@/game/worldState';
+import type { WorldStateSnapshot } from '@/game/worldState';
 
 export type Direction = 'down' | 'up' | 'left' | 'right';
 
 export interface MapSceneData {
     mapKey?: string;
     spawnId?: string;
+    tileX?: number;
+    tileY?: number;
     facing?: Direction;
+    transitioned?: boolean;
 }
 
 interface TiledProperty {
@@ -21,6 +32,7 @@ interface WarpTrigger {
     tileY: number;
     targetMap: string;
     targetSpawn: string;
+    facing?: Direction;
 }
 
 interface InteractiveTrigger {
@@ -30,12 +42,22 @@ interface InteractiveTrigger {
     dialogueKey: string;
     npcId?: string;
     challengeCenter?: boolean;
+    filterDiscipline?: string;
+    challengeId?: string;
+    triggerId?: string;
+}
+
+interface BlockerTile {
+    tileX: number;
+    tileY: number;
+    triggerId: string;
+    openTileGid: number;
 }
 
 const TILE_SIZE = 16;
 const STEP_DURATION_MS = 150;
 const CAMERA_ZOOM = 3;
-const FADE_DURATION_MS = 200;
+const FADE_DURATION_MS = 300;
 
 const IDLE_FRAMES: Record<Direction, number> = {
     down: 0,
@@ -53,7 +75,14 @@ const DIRECTION_DELTAS: Record<Direction, { dx: number; dy: number }> = {
 
 const MAP_TO_SCENE: Record<string, string> = {
     'localhost-town': 'OverworldScene',
+    'algorithm-woods': 'OverworldScene',
+    'artisan-city': 'OverworldScene',
+    'legacy-harbor': 'OverworldScene',
     'challenge-center': 'InteriorScene',
+    'starter-house': 'InteriorScene',
+    'logic-pavilion': 'InteriorScene',
+    'billing-guild': 'InteriorScene',
+    'security-warehouse': 'InteriorScene',
 };
 
 export abstract class BaseMapScene extends Phaser.Scene {
@@ -61,9 +90,12 @@ export abstract class BaseMapScene extends Phaser.Scene {
     protected abstract readonly defaultSpawnId: string;
 
     protected map!: Phaser.Tilemaps.Tilemap;
+    protected groundLayer: Phaser.Tilemaps.TilemapLayer | null = null;
+    protected detailLayer: Phaser.Tilemaps.TilemapLayer | null = null;
     protected collisionLayer: Phaser.Tilemaps.TilemapLayer | null = null;
     protected player!: Phaser.GameObjects.Sprite;
 
+    protected currentMapKey = '';
     protected playerTileX = 0;
     protected playerTileY = 0;
     protected facing: Direction = 'down';
@@ -76,6 +108,9 @@ export abstract class BaseMapScene extends Phaser.Scene {
     private warps = new Map<string, WarpTrigger>();
     private interactables = new Map<string, InteractiveTrigger>();
     private occupiedNpcTiles = new Set<string>();
+    private blockers: BlockerTile[] = [];
+    private terminalBadges = new Map<string, Phaser.GameObjects.Rectangle>();
+    private interactPrompt?: Phaser.GameObjects.Text;
 
     private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
     private wasd?: {
@@ -95,10 +130,13 @@ export abstract class BaseMapScene extends Phaser.Scene {
         this.warps.clear();
         this.interactables.clear();
         this.occupiedNpcTiles.clear();
+        this.blockers = [];
+        this.terminalBadges.clear();
         this.interactKeys = [];
 
         const mapKey = data?.mapKey ?? this.defaultMapKey;
         const spawnId = data?.spawnId ?? this.defaultSpawnId;
+        this.currentMapKey = mapKey;
         this.facing = data?.facing ?? 'down';
 
         this.cameras.main.setBackgroundColor('#0f172a');
@@ -115,25 +153,32 @@ export abstract class BaseMapScene extends Phaser.Scene {
             );
         }
 
-        const groundLayer = this.map.createLayer('ground', tileset, 0, 0);
-        const detailLayer = this.map.createLayer(
-            'ground_detail',
-            tileset,
-            0,
-            0,
-        );
+        this.groundLayer = this.map.createLayer('ground', tileset, 0, 0);
+        this.detailLayer = this.map.createLayer('ground_detail', tileset, 0, 0);
         this.collisionLayer = this.map.createLayer('collision', tileset, 0, 0);
         const overheadLayer = this.map.createLayer('overhead', tileset, 0, 0);
 
-        groundLayer?.setDepth(0);
-        detailLayer?.setDepth(1);
+        this.groundLayer?.setDepth(0);
+        this.detailLayer?.setDepth(1);
         this.collisionLayer?.setDepth(2);
         overheadLayer?.setDepth(20);
 
         const spawn = this.parseObjectLayer(spawnId);
+        this.applyUnlockedBlockers();
+        this.renderTerminalIndicators();
 
-        this.playerTileX = spawn.tileX;
-        this.playerTileY = spawn.tileY;
+        // Backward-compatible Save Coordinate Guard: ensure saved coordinates are in-bounds & walkable
+        const hasValidSavedCoords =
+            typeof data?.tileX === 'number' &&
+            typeof data?.tileY === 'number' &&
+            this.canStepTo(data.tileX, data.tileY);
+
+        this.playerTileX = hasValidSavedCoords
+            ? (data?.tileX as number)
+            : spawn.tileX;
+        this.playerTileY = hasValidSavedCoords
+            ? (data?.tileY as number)
+            : spawn.tileY;
 
         this.player = this.add.sprite(
             this.tileToWorldCenter(this.playerTileX),
@@ -143,9 +188,24 @@ export abstract class BaseMapScene extends Phaser.Scene {
         );
         this.player.setDepth(10);
 
+        this.interactPrompt = this.add
+            .text(0, 0, 'E / Space', {
+                fontFamily: 'monospace',
+                fontSize: '7px',
+                fontStyle: 'bold',
+                color: '#f8fafc',
+                backgroundColor: '#0f172ad9',
+                padding: { x: 3, y: 1 },
+            })
+            .setOrigin(0.5, 1)
+            .setDepth(30)
+            .setVisible(false);
+
         this.configureCamera();
         this.configureInput();
         this.subscribeToEvents();
+        this.updateInteractPrompt();
+        this.emitPlayerLocation(Boolean(data?.transitioned));
 
         this.cameras.main.fadeIn(FADE_DURATION_MS, 15, 23, 42);
 
@@ -179,6 +239,34 @@ export abstract class BaseMapScene extends Phaser.Scene {
         }
     }
 
+    private getWorldState(): WorldStateSnapshot {
+        const stored = this.registry.get('worldState') as
+            | WorldStateSnapshot
+            | undefined;
+
+        return stored ?? DEFAULT_WORLD_STATE;
+    }
+
+    private applyUnlockedBlockers(): void {
+        const unlocked = new Set(this.getWorldState().unlockedTriggers);
+
+        for (const blocker of this.blockers) {
+            if (!unlocked.has(blocker.triggerId)) {
+                continue;
+            }
+
+            this.collisionLayer?.removeTileAt(blocker.tileX, blocker.tileY);
+
+            if (blocker.openTileGid > 0) {
+                this.detailLayer?.putTileAt(
+                    blocker.openTileGid,
+                    blocker.tileX,
+                    blocker.tileY,
+                );
+            }
+        }
+    }
+
     private configureCamera(): void {
         const camera = this.cameras.main;
         camera.setZoom(CAMERA_ZOOM);
@@ -196,7 +284,7 @@ export abstract class BaseMapScene extends Phaser.Scene {
         const boundsHeight = Math.max(mapHeight, viewHeight);
 
         camera.setBounds(boundsX, boundsY, boundsWidth, boundsHeight);
-        camera.startFollow(this.player, true);
+        camera.startFollow(this.player, true, 0.12, 0.12);
     }
 
     private configureInput(): void {
@@ -236,9 +324,65 @@ export abstract class BaseMapScene extends Phaser.Scene {
                 this.isPaused = true;
                 this.stopWalkAnimation();
             }),
-            gameEvents.on('resume-overworld', () => {
+            gameEvents.on('resume-overworld', (payload) => {
                 this.isPaused = false;
                 this.interactUnlockAt = this.time.now + 150;
+
+                if (payload?.unlockedTriggerId) {
+                    const state = this.getWorldState();
+
+                    if (
+                        !state.unlockedTriggers.includes(
+                            payload.unlockedTriggerId,
+                        )
+                    ) {
+                        this.registry.set('worldState', {
+                            ...state,
+                            unlockedTriggers: [
+                                ...state.unlockedTriggers,
+                                payload.unlockedTriggerId,
+                            ],
+                        });
+                    }
+
+                    this.applyUnlockedBlockers();
+                    this.refreshTerminalIndicators(payload.unlockedTriggerId);
+                }
+            }),
+            gameEvents.on('load-world-state', (payload) => {
+                if (this.isTransitioning) {
+                    return;
+                }
+
+                if (payload.unlockedTerminals) {
+                    const state = this.getWorldState();
+                    this.registry.set('worldState', {
+                        ...state,
+                        unlockedTriggers: [...payload.unlockedTerminals],
+                    });
+                }
+
+                const targetMap = zoneToMapKey(payload.zone);
+                const targetScene = MAP_TO_SCENE[targetMap] ?? 'OverworldScene';
+
+                this.isPaused = false;
+                this.isTransitioning = true;
+                this.stopWalkAnimation();
+
+                this.cameras.main.once(
+                    Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE,
+                    () => {
+                        this.scene.start(targetScene, {
+                            mapKey: targetMap,
+                            tileX: payload.x,
+                            tileY: payload.y,
+                            facing: payload.facing,
+                            transitioned: false,
+                        } satisfies MapSceneData);
+                    },
+                );
+
+                this.cameras.main.fadeOut(FADE_DURATION_MS, 15, 23, 42);
             }),
         );
     }
@@ -272,6 +416,16 @@ export abstract class BaseMapScene extends Phaser.Scene {
                 } else if (obj.type === 'warp') {
                     const targetMap = String(props.targetMap ?? '');
                     const targetSpawn = String(props.targetSpawn ?? 'default');
+                    const rawFacing = props.facing
+                        ? String(props.facing)
+                        : undefined;
+                    const facing =
+                        rawFacing === 'up' ||
+                        rawFacing === 'down' ||
+                        rawFacing === 'left' ||
+                        rawFacing === 'right'
+                            ? rawFacing
+                            : undefined;
 
                     if (targetMap) {
                         this.warps.set(this.tileKey(tileX, tileY), {
@@ -279,6 +433,19 @@ export abstract class BaseMapScene extends Phaser.Scene {
                             tileY,
                             targetMap,
                             targetSpawn,
+                            facing,
+                        });
+                    }
+                } else if (obj.type === 'blocker') {
+                    const triggerId = String(props.triggerId ?? '');
+                    const openTileGid = Number(props.openTileGid ?? 0);
+
+                    if (triggerId) {
+                        this.blockers.push({
+                            tileX,
+                            tileY,
+                            triggerId,
+                            openTileGid,
                         });
                     }
                 } else if (
@@ -289,6 +456,15 @@ export abstract class BaseMapScene extends Phaser.Scene {
                     const dialogueKey = String(props.dialogueKey ?? '');
                     const npcId = props.npcId ? String(props.npcId) : undefined;
                     const isHidden = Boolean(props.hidden);
+                    const filterDiscipline = props.filterDiscipline
+                        ? String(props.filterDiscipline)
+                        : undefined;
+                    const challengeId = props.challengeId
+                        ? String(props.challengeId)
+                        : undefined;
+                    const triggerId = props.triggerId
+                        ? String(props.triggerId)
+                        : undefined;
 
                     this.interactables.set(this.tileKey(tileX, tileY), {
                         tileX,
@@ -297,11 +473,18 @@ export abstract class BaseMapScene extends Phaser.Scene {
                         dialogueKey,
                         npcId,
                         challengeCenter: Boolean(props.challengeCenter),
+                        filterDiscipline,
+                        challengeId,
+                        triggerId,
                     });
 
                     if (obj.type === 'npc' && !isHidden) {
                         this.occupiedNpcTiles.add(this.tileKey(tileX, tileY));
-                        const frame = npcId === 'center-guide' ? 3 : 0;
+                        const frame =
+                            npcId === 'center-guide' ||
+                            npcId?.startsWith('guild-')
+                                ? 3
+                                : 0;
                         const npcSprite = this.add.sprite(
                             this.tileToWorldCenter(tileX),
                             this.tileToWorldCenter(tileY),
@@ -370,12 +553,16 @@ export abstract class BaseMapScene extends Phaser.Scene {
 
         if (!this.canStepTo(targetX, targetY)) {
             this.stopWalkAnimation();
+            this.updateInteractPrompt();
+            this.emitPlayerLocation(false);
             return;
         }
 
         this.isMoving = true;
+        this.interactPrompt?.setVisible(false);
         this.playerTileX = targetX;
         this.playerTileY = targetY;
+        audioManager.playSfx('footstep', this.detectSurface(targetX, targetY));
 
         this.player.anims.play(`player-walk-${direction}`, true);
 
@@ -396,6 +583,9 @@ export abstract class BaseMapScene extends Phaser.Scene {
                     this.triggerWarp(warp);
                     return;
                 }
+
+                this.updateInteractPrompt();
+                this.emitPlayerLocation(false);
 
                 if (this.getHeldDirection() === null) {
                     this.stopWalkAnimation();
@@ -444,7 +634,7 @@ export abstract class BaseMapScene extends Phaser.Scene {
         this.stopWalkAnimation();
 
         const nextFacing: Direction =
-            warp.targetMap === 'challenge-center' ? 'up' : 'down';
+            warp.facing ?? (targetScene === 'InteriorScene' ? 'up' : 'down');
 
         this.cameras.main.once(
             Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE,
@@ -453,6 +643,7 @@ export abstract class BaseMapScene extends Phaser.Scene {
                     mapKey: warp.targetMap,
                     spawnId: warp.targetSpawn,
                     facing: nextFacing,
+                    transitioned: true,
                 } satisfies MapSceneData);
             },
         );
@@ -470,7 +661,31 @@ export abstract class BaseMapScene extends Phaser.Scene {
             return;
         }
 
-        const payload = resolveDialogue(trigger.dialogueKey);
+        if (trigger.kind === 'terminal') {
+            this.isPaused = true;
+            this.stopWalkAnimation();
+            gameEvents.emit('pause-overworld');
+
+            if (trigger.challengeId) {
+                gameEvents.emit('open-challenge', {
+                    challengeId: trigger.challengeId,
+                });
+                return;
+            }
+
+            if (trigger.challengeCenter) {
+                gameEvents.emit('open-challenge-center', {
+                    source: this.currentMapKey || this.defaultMapKey,
+                    discipline: trigger.filterDiscipline,
+                });
+                return;
+            }
+        }
+
+        const payload = resolveDialogue(
+            trigger.dialogueKey,
+            this.getWorldState(),
+        );
 
         this.isPaused = true;
         this.stopWalkAnimation();
@@ -487,6 +702,143 @@ export abstract class BaseMapScene extends Phaser.Scene {
         }
 
         this.player.setFrame(IDLE_FRAMES[this.facing]);
+    }
+
+    private renderTerminalIndicators(): void {
+        const unlocked = new Set(this.getWorldState().unlockedTriggers);
+        const blockerTriggers = new Set(
+            this.blockers.map((blocker) => blocker.triggerId),
+        );
+
+        for (const [key, trigger] of this.interactables.entries()) {
+            if (trigger.kind !== 'terminal') {
+                continue;
+            }
+
+            const isSolved =
+                trigger.triggerId !== undefined &&
+                unlocked.has(trigger.triggerId);
+            const isGateLock =
+                trigger.triggerId !== undefined &&
+                blockerTriggers.has(trigger.triggerId);
+
+            const color = isSolved
+                ? 0x34d399
+                : isGateLock
+                  ? 0xf59e0b
+                  : 0x22d3ee;
+
+            const indicator = this.add.rectangle(
+                this.tileToWorldCenter(trigger.tileX),
+                trigger.tileY * TILE_SIZE + 2,
+                6,
+                3,
+                color,
+                0.95,
+            );
+            indicator.setDepth(15);
+
+            if (!isSolved) {
+                this.tweens.add({
+                    targets: indicator,
+                    alpha: 0.35,
+                    duration: 700,
+                    yoyo: true,
+                    repeat: -1,
+                });
+            }
+
+            this.terminalBadges.set(key, indicator);
+        }
+    }
+
+    private refreshTerminalIndicators(newlyUnlockedTriggerId?: string): void {
+        const unlocked = new Set(this.getWorldState().unlockedTriggers);
+
+        for (const [key, trigger] of this.interactables.entries()) {
+            if (trigger.kind !== 'terminal' || !trigger.triggerId) {
+                continue;
+            }
+
+            const indicator = this.terminalBadges.get(key);
+            if (!indicator || !unlocked.has(trigger.triggerId)) {
+                continue;
+            }
+
+            this.tweens.killTweensOf(indicator);
+            indicator.setFillStyle(0x34d399, 1);
+            indicator.setAlpha(1);
+
+            if (trigger.triggerId === newlyUnlockedTriggerId) {
+                const cue = this.add
+                    .text(
+                        this.tileToWorldCenter(trigger.tileX),
+                        trigger.tileY * TILE_SIZE - 4,
+                        'UNLOCKED!',
+                        {
+                            fontFamily: 'monospace',
+                            fontSize: '7px',
+                            fontStyle: 'bold',
+                            color: '#34d399',
+                            backgroundColor: '#022c22cc',
+                            padding: { x: 2, y: 1 },
+                        },
+                    )
+                    .setOrigin(0.5, 1)
+                    .setDepth(35);
+
+                this.tweens.add({
+                    targets: cue,
+                    y: cue.y - 12,
+                    alpha: 0,
+                    duration: 1100,
+                    ease: 'Cubic.easeOut',
+                    onComplete: () => cue.destroy(),
+                });
+            }
+        }
+    }
+
+    private updateInteractPrompt(): void {
+        if (!this.interactPrompt || !this.player) {
+            return;
+        }
+
+        const { dx, dy } = DIRECTION_DELTAS[this.facing];
+        const target = this.interactables.get(
+            this.tileKey(this.playerTileX + dx, this.playerTileY + dy),
+        );
+
+        if (!target) {
+            this.interactPrompt.setVisible(false);
+            return;
+        }
+
+        this.interactPrompt.setPosition(this.player.x, this.player.y - 11);
+        this.interactPrompt.setVisible(true);
+    }
+
+    private detectSurface(tileX: number, tileY: number): FootstepSurface {
+        const gid = this.groundLayer?.getTileAt(tileX, tileY)?.index ?? 1;
+        if (gid === 6 || gid === 7) {
+            return 'wood';
+        }
+        if (gid === 3 || gid === 4 || gid === 8) {
+            return 'stone';
+        }
+        return 'grass';
+    }
+
+    private emitPlayerLocation(transitioned: boolean): void {
+        gameEvents.emit('player-location-changed', {
+            zone: mapKeyToZone(this.currentMapKey || this.defaultMapKey),
+            x: this.playerTileX,
+            y: this.playerTileY,
+            mapWidth: this.map.width,
+            mapHeight: this.map.height,
+            facing: this.facing,
+            transitioned,
+        });
     }
 
     private tileToWorldCenter(tileCoord: number): number {

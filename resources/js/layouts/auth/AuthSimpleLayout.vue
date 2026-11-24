@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { Gamepad2 } from '@lucide/vue';
+import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import { home } from '@/routes';
 
 defineProps<{
@@ -26,10 +26,8 @@ defineProps<{
                         :href="home()"
                         class="flex flex-col items-center gap-2 font-mono font-bold text-white transition hover:text-indigo-300"
                     >
-                        <div
-                            class="flex size-12 items-center justify-center rounded-lg border-2 border-indigo-400 bg-indigo-950 text-indigo-200 shadow-md"
-                        >
-                            <Gamepad2 class="size-6" />
+                        <div class="flex size-14 items-center justify-center">
+                            <AppLogoIcon class="h-16 w-auto" />
                         </div>
                         <span class="text-sm tracking-wide">
                             ele<span class="text-indigo-400">PHP</span>ant

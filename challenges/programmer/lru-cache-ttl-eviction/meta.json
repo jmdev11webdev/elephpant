@@ -1,0 +1,22 @@
+{
+    "id": "lru-cache-ttl-eviction",
+    "slug": "lru-cache-ttl-eviction",
+    "title": "LRU Cache with TTL Eviction",
+    "discipline": "programmer",
+    "district": "algorithm-woods",
+    "category": "Caching & Eviction",
+    "difficulty": "expert",
+    "order": 5,
+    "evaluationType": "code_execution",
+    "supportedLanguages": ["php"],
+    "xpReward": 280,
+    "estimatedMinutes": 20,
+    "skillKey": "algorithms-data-structures",
+    "mapTriggerId": null,
+    "terminalKey": "algorithm-woods-lru-terminal",
+    "hints": [
+        "PHP arrays preserve insertion order: `unset($this->entries[$key])` followed by re-assignment moves `$key` to the most-recently-used tail.",
+        "Always purge expired entries (`expiresAt <= $now`) before checking capacity so expired keys do not cause unnecessary evictions.",
+        "```php\n// Evict LRU head when count($this->entries) > $this->capacity:\n$oldestKey = array_key_first($this->entries);\nif ($oldestKey !== null) {\n    unset($this->entries[$oldestKey]);\n}\n```"
+    ]
+}

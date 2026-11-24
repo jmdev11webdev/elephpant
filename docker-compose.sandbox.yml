@@ -1,0 +1,28 @@
+# Hardened Ephemeral PHP 8.5.13 Sandbox Image Preparation for WSL2 (Debian / cgroup v2)
+#
+# elePHPant's default local driver (`SANDBOX_DRIVER=docker`) launches a fresh,
+# hardened ephemeral `php:8.5.13-cli-alpine` container per submission with:
+#   --rm --network=none --read-only --tmpfs /tmp:rw,noexec,nosuid,size=16m
+#   --cap-drop=ALL --security-opt=no-new-privileges --pids-limit=64
+#   --memory=128m --cpus=0.5 --user=65534:65534
+#
+# Pull and verify the patched PHP 8.5.13 image once:
+#   docker compose -f docker-compose.sandbox.yml pull
+#   docker compose -f docker-compose.sandbox.yml run --rm php-sandbox php -v
+
+services:
+    php-sandbox:
+        image: php:8.5.13-cli-alpine
+        network_mode: none
+        read_only: true
+        user: '65534:65534'
+        cap_drop:
+            - ALL
+        security_opt:
+            - no-new-privileges:true
+        pids_limit: 64
+        mem_limit: 128m
+        cpus: 0.5
+        tmpfs:
+            - /tmp:rw,noexec,nosuid,size=16m
+        command: ['php', '-v']

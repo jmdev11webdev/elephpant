@@ -13,6 +13,7 @@ import {
     Wrench,
 } from '@lucide/vue';
 import { ref } from 'vue';
+import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import PixelHeroCanvas from '@/components/landing/PixelHeroCanvas.vue';
 import { dashboard, login, register } from '@/routes';
 
@@ -124,13 +125,9 @@ function submitContact(): void {
             >
                 <a
                     href="#home"
-                    class="flex items-center gap-2.5 font-mono text-base font-bold tracking-tight text-white"
+                    class="flex items-center gap-3 font-mono text-xl font-extrabold tracking-tight text-white"
                 >
-                    <span
-                        class="flex size-8 items-center justify-center rounded border-2 border-indigo-400 bg-indigo-950 text-indigo-200 shadow-sm"
-                    >
-                        <Gamepad2 class="size-4" />
-                    </span>
+                    <AppLogoIcon class="h-10 w-auto shrink-0" />
                     <span>ele<span class="text-indigo-400">PHP</span>ant</span>
                 </a>
 

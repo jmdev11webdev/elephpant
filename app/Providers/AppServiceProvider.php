@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Contracts\ChallengeRunnerInterface;
+use App\Services\Sandbox\DockerPhpChallengeRunner;
+use App\Services\Sandbox\FakeChallengeRunner;
+use App\Services\Sandbox\PistonChallengeRunner;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +19,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(ChallengeRunnerInterface::class, function (): ChallengeRunnerInterface {
+            return match (config('sandbox.driver')) {
+                'fake' => new FakeChallengeRunner,
+                'piston' => new PistonChallengeRunner,
+                default => new DockerPhpChallengeRunner,
+            };
+        });
     }
 
     /**
